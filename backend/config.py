@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     audio_chunk_size: int = 1024
     audio_channels: int = 1
     prefer_usb_audio: bool = True  # Prefer USB devices for input/output
+    echo_cancel_source: str | None = None  # PulseAudio echo-cancelled source name (Linux only)
     
     # Porcupine settings
     porcupine_keyword: str = "porcupine"  # Built-in keyword

@@ -20,7 +20,9 @@ async def main():
     async def on_wake_word_detected():
         """Async callback when wake word is detected."""
         print("Processing voice command...")
+        detector.pause()  # Release mic for voice agent
         await voice_agent.listen()
+        detector.resume()  # Re-acquire mic for wake word detection
 
     # Initialize and start wake word detector
     detector = WakeWordDetector(on_wake_word=on_wake_word_detected)
