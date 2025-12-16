@@ -13,8 +13,10 @@ class Settings(BaseSettings):
     
     # Audio settings
     audio_rate: int = 16000
+    audio_output_rate: int = 16000  # Deepgram agent output sample rate
     audio_chunk_size: int = 1024
     audio_channels: int = 1
+    prefer_usb_audio: bool = True  # Prefer USB devices for input/output
     
     # Porcupine settings
     porcupine_keyword: str = "porcupine"  # Built-in keyword

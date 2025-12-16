@@ -5,7 +5,7 @@ import time
 from dotenv import load_dotenv
 import websockets
 from .voice_agent_config.settings import SETTINGS
-# from backend.config import DEEPGRAM_API_KEY
+from .audio_player import AudioPlayer
 
 load_dotenv()
 DEEPGRAM_API_KEY: str = os.getenv("DEEPGRAM_API_KEY")
@@ -14,6 +14,7 @@ class VoiceAgent:
     def __init__(self):
         self.connection = None
         self.url = "wss://agent.deepgram.com/v1/agent/converse"
+        self._audio_player = None
 
     async def listen(self, timeout_seconds: int = 5):
         """
@@ -34,6 +35,10 @@ class VoiceAgent:
                 self.connection = websocket
                 print(f"🔌 Connected to Deepgram Agent API (listening for {timeout_seconds}s)")
                 
+                # Start the audio player for playback
+                self._audio_player = AudioPlayer()
+                self._audio_player.start()
+                
                 # Listen for all incoming messages from the websocket
                 while True:
                     # Check if timeout has been reached
@@ -51,9 +56,9 @@ class VoiceAgent:
                         
                         # Handle different message types
                         if isinstance(message, bytes):
-                            # Binary message (audio data)
-                            print(f"📦 Binary message received: {len(message)} bytes")
-                            print(f"   First 50 bytes: {message[:50]}")
+                            # Binary message (audio data) - play through speaker
+                            if self._audio_player:
+                                self._audio_player.play(message)
                         elif isinstance(message, str):
                             # Text message - try to parse as JSON
                             try:
@@ -89,6 +94,10 @@ class VoiceAgent:
             print(f"Error in listen: {e}")
             raise
         finally:
+            # Stop audio player
+            if self._audio_player:
+                self._audio_player.stop()
+                self._audio_player = None
             print("✅ Voice session ended")
 
     async def close(self):

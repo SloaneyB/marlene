@@ -64,7 +64,7 @@ AGENT_SETTINGS = {
     "listen": LISTEN_SETTINGS,
     "think": THINK_SETTINGS,
     "speak": SPEAK_SETTINGS,
-    "greeting": "Sup dog?",
+    "greeting": "What's up dog?",
 }
 
 SETTINGS = {"type": "Settings", "audio": AUDIO_SETTINGS, "agent": AGENT_SETTINGS}
