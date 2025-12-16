@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marlene - Smart Home Assistant</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏠 Marlene</h1>
+            <p class="subtitle">Smart Home Assistant</p>
+        </header>
+
+        <main>
+            <!-- Status Panel -->
+            <section class="status-panel">
+                <h2>System Status</h2>
+                <div class="status-grid">
+                    <div class="status-item">
+                        <span class="status-label">Listening:</span>
+                        <span id="listening-status" class="status-value">●</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Processing:</span>
+                        <span id="processing-status" class="status-value">●</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Control Panel -->
+            <section class="control-panel">
+                <h2>Controls</h2>
+                <div class="button-group">
+                    <button id="start-btn" class="btn btn-primary">
+                        🎤 Start Listening
+                    </button>
+                    <button id="stop-btn" class="btn btn-secondary" disabled>
+                        ⏹️ Stop Listening
+                    </button>
+                    <button id="manual-btn" class="btn btn-accent">
+                        🎙️ Manual Command
+                    </button>
+                </div>
+            </section>
+
+            <!-- Command History -->
+            <section class="history-panel">
+                <h2>Recent Activity</h2>
+                <div id="activity-log" class="activity-log">
+                    <p class="placeholder">No activity yet. Start listening for wake word!</p>
+                </div>
+            </section>
+
+            <!-- Settings -->
+            <section class="settings-panel">
+                <h2>Settings</h2>
+                <div class="setting-item">
+                    <label for="duration-input">Command Duration (seconds):</label>
+                    <input type="number" id="duration-input" value="5" min="1" max="30">
+                </div>
+                <div class="setting-item">
+                    <label>API Server:</label>
+                    <span id="api-status" class="api-status">Checking...</span>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Marlene v0.1.0 | Connected to API</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
