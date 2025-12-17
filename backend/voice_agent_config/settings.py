@@ -42,9 +42,8 @@ LISTEN_SETTINGS = {
 
 THINK_SETTINGS = {
     "provider": {
-        "type": "open_ai",
-        "model": "gpt-4o-mini",
-        "temperature": 0.7,
+        "type": "anthropic",
+        "model": "claude-3-5-haiku-latest"
     },
     "prompt": PROMPT.format(
         current_date=datetime.now().strftime("%A, %B %d, %Y")

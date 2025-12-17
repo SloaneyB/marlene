@@ -5,7 +5,12 @@ import pvporcupine
 from typing import Callable, Optional, Awaitable
 from backend.audio_manager import AudioManager
 from backend.config import settings
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
+
+PORCUPINE_ACCESS_KEY: str = os.getenv("PORCUPINE_ACCESS_KEY")
 
 class WakeWordDetector:
     """Detects wake word using Porcupine picovoice."""
@@ -36,11 +41,17 @@ class WakeWordDetector:
         # Initialize Porcupine (only if not already initialized)
         if not self.porcupine:
             try:
+                # self.porcupine = pvporcupine.create(
+                #     access_key=settings.porcupine_access_key,
+                #     keywords=[settings.porcupine_keyword],
+                #     sensitivities=[settings.porcupine_sensitivity]
+                # )
+                print(f'From Settings, file path = {settings.porcupine_keyword_file_path}')
                 self.porcupine = pvporcupine.create(
-                    access_key=settings.porcupine_access_key,
-                    keywords=[settings.porcupine_keyword],
-                    sensitivities=[settings.porcupine_sensitivity]
-                )
+                    access_key=PORCUPINE_ACCESS_KEY,
+                    keyword_paths=[settings.porcupine_keyword_file_path]
+                    )
+
             except Exception as e:
                 print(f"Error initializing Porcupine: {e}")
                 raise

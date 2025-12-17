@@ -20,8 +20,9 @@ class Settings(BaseSettings):
     echo_cancel_source: str | None = None  # PulseAudio echo-cancelled source name (Linux only)
     
     # Porcupine settings
-    porcupine_keyword: str = "porcupine"  # Built-in keyword
+    porcupine_keyword: str = "Hey Marlene"  # custom keyword
     porcupine_sensitivity: float = 0.5
+    porcupine_keyword_file_path: str = "./backend/porcupine_config/hey-marlene_mac.ppn"
     
     # Deepgram settings
     deepgram_model: str = "nova-2"
