@@ -163,6 +163,22 @@ class VoiceAgent:
             print(f"💬 [{role}]: {content}")
         elif msg_type == "AgentAudioDone":
             print("🤖 Agent finished speaking")
+        elif msg_type == "FunctionCallRequest":
+            functions = parsed.get("functions", [])
+            if len(functions) > 1:
+                raise NotImplementedError(
+                    "Multiple functions not supported"
+                )
+            function_name = functions[0].get("name")
+            function_call_id = functions[0].get("id")
+            # parameters = json.loads(functions[0].get("arguments", {}))
+            function_call_response = {
+                "type": "FunctionCallResponse",
+                "name": function_name,
+                "id": function_call_id,
+                "content": "The function call was successful."
+            }
+            asyncio.create_task(self._send_function_call_response(function_call_response))
         else:
             # Log other message types
             print(f"📨 {msg_type}: {json.dumps(parsed, indent=2)}")
@@ -172,6 +188,12 @@ class VoiceAgent:
         if self.connection:
             await self.connection.send(json.dumps(SETTINGS))
             print("✅ SETTINGS sent successfully")
+
+    async def _send_function_call_response(self, function_call_response):
+        """Send FunctionCallResponse to Deepgram."""
+        if self.connection:
+            await self.connection.send(json.dumps(function_call_response))
+            print("✅ Function Call Response sent successfully")
 
     async def close(self):
         """Close the connection"""
