@@ -26,7 +26,7 @@ Edit `.env` and add:
 **Terminal Mode (Recommended for testing):**
 
 ```bash
-python main.py
+uv run python main.py
 ```
 
 This listens for "porcupine" wake word and processes voice commands.
@@ -35,13 +35,13 @@ This listens for "porcupine" wake word and processes voice commands.
 Terminal 1:
 
 ```bash
-python server.py
+uv run python server.py
 ```
 
 Terminal 2:
 
 ```bash
-python -m http.server 8001 --directory frontend
+uv run python -m http.server 8001 --directory frontend
 ```
 
 Then open: `http://localhost:8001`
