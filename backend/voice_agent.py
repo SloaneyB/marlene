@@ -7,6 +7,7 @@ from .voice_agent_config.settings import SETTINGS
 from .audio_player import AudioPlayer
 from .audio_manager import AudioManager
 from .config import settings
+from .voice_agent_config.smart_home_controller import control_smart_home
 
 load_dotenv()
 DEEPGRAM_API_KEY: str = os.getenv("DEEPGRAM_API_KEY")
@@ -128,7 +129,7 @@ class VoiceAgent:
                     # Text message - try to parse as JSON
                     try:
                         parsed = json.loads(message)
-                        self._handle_json_message(parsed)
+                        await self._handle_json_message(parsed)
                     except json.JSONDecodeError:
                         # Plain text message
                         print(f"📝 Text message received: {message}")
@@ -144,7 +145,7 @@ class VoiceAgent:
                 print(f"📥 Receive task error: {e}")
                 break
     
-    def _handle_json_message(self, parsed: dict):
+    async def _handle_json_message(self, parsed: dict):
         """Handle parsed JSON messages from Deepgram."""
         msg_type = parsed.get("type", "unknown")
         
@@ -171,7 +172,8 @@ class VoiceAgent:
                 )
             function_name = functions[0].get("name")
             function_call_id = functions[0].get("id")
-            # parameters = json.loads(functions[0].get("arguments", {}))
+            parameters = json.loads(functions[0].get("arguments", {}))
+            await control_smart_home(parameters)
             function_call_response = {
                 "type": "FunctionCallResponse",
                 "name": function_name,
