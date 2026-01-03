@@ -33,6 +33,7 @@ FUNCTION_DEFINITIONS = [
                 "device": {
                     "type": "string",
                     "description": "The name of the smart home device which is going to be controlled (e.g., 'bedroom light', 'living room lamp')",
+                    # IMPROVEMENT: make this list an env variable so that in the smart_home_controller.py we don't have to manually type in the 
                     "enum": ["the tall lamp", "the living room lights", "the kitchen light", "the dining room light", "the main lights", "the light", "the hallway lights", "JJ's lamp", "JJ's light"]
                 },
                 "action": {
