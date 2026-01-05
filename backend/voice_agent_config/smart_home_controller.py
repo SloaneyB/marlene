@@ -2,78 +2,74 @@ import asyncio
 import requests
 import os
 from dotenv import load_dotenv
+from .utils import normalize_device_name
+
 load_dotenv()
 
 voice_monkey_token = os.getenv("VOICEMONKEY_API_TOKEN")
 
-# IMPROVEMENT: Add a function map dictionary here to map the deice names to the VoiceMonkey device triggers
-device_trigger_map = {
-    "the living room lights": "toggle-the-living-room-lamp",
-    "the tall lamp": "toggle-the-living-room-lamp",
-    "the living room lamp": "toggle-the-living-room-lamp",
-    "the kitchen light": "turn-on-the-kitchen-light",
-    "the dining room light": "turn-on-the-dining-room-light",
-    "the main lights": "turn-on-the-main-lights",
-    "the hallway lights": "turn-on-the-hallway-lights"
-}
-
 async def control_smart_home(parameters):
-    action = parameters.get("action", None)
-    device = parameters.get("device", None)
+    """
+    Control smart home devices via VoiceMonkey API.
     
-    if action == "off":
-        if device == "the living room lights" or device == "the tall lamp" or device == "the living room lamp":
-            await asyncio.to_thread(
-                requests.get,
-                f"https://api-v2.voicemonkey.io/trigger?token={voice_monkey_token}&device=toggle-the-living-room-lamp"
-            )
-        elif device == "the kitchen light":
-            await asyncio.to_thread(
-                requests.get,
-                f"https://api-v2.voicemonkey.io/trigger?token={voice_monkey_token}&device=turn-off-the-kitchen-light"
-            )
-        elif device == "the dining room light":
-             await asyncio.to_thread(
-                requests.get,
-                f"https://api-v2.voicemonkey.io/trigger?token={voice_monkey_token}&device=turn-off-the-dining-room-light"
-            )
-        elif device == "the main lights":
-             await asyncio.to_thread(
-                requests.get,
-                f"https://api-v2.voicemonkey.io/trigger?token={voice_monkey_token}&device=turn-off-the-main-lights"
-            )
-        elif device == "the hallway lights":
-             await asyncio.to_thread(
-                requests.get,
-                f"https://api-v2.voicemonkey.io/trigger?token={voice_monkey_token}&device=turn-off-the-hallway-lights"
-            )
-        else:
-            pass # placeholder for now for other lights not in living room vicinity
-    elif action == "on":
-        if device == "the living room lights" or device == "the tall lamp" or device == "the living room lamp":
-            await asyncio.to_thread(
-                requests.get,
-                f"https://api-v2.voicemonkey.io/trigger?token={voice_monkey_token}&device=turn-on-living-room-lamp"
-            )
-        elif device == "the kitchen light":
-            await asyncio.to_thread(
-                requests.get,
-                f"https://api-v2.voicemonkey.io/trigger?token={voice_monkey_token}&device=turn-on-the-kitchen-light"
-            )
-        elif device == "the dining room light":
-             await asyncio.to_thread(
-                requests.get,
-                f"https://api-v2.voicemonkey.io/trigger?token={voice_monkey_token}&device=turn-on-the-dining-room-light"
-            )
-        elif device == "the main lights":
-             await asyncio.to_thread(
-                requests.get,
-                f"https://api-v2.voicemonkey.io/trigger?token={voice_monkey_token}&device=turn-on-the-main-lights"
-            )
-        elif device == "the hallway lights":
-             await asyncio.to_thread(
-                requests.get,
-                f"https://api-v2.voicemonkey.io/trigger?token={voice_monkey_token}&device=turn-on-the-hallway-lights"
-            )
+    This function dynamically builds VoiceMonkey API endpoints based on the device name
+    and action provided. Device names are normalized to lowercase-hyphenated format.
+    
+    Args:
+        parameters: Dictionary containing:
+            - device: Natural language device name (e.g., "Living Room Lights")
+            - action: One of "on", "off", "change color", "change brightness"
+            - color: (optional) Color name for color changes
+            - brightness: (optional) Brightness percentage for brightness changes
+    
+    Example:
+        Device: "Living Room Lights", Action: "on"
+        → API endpoint: "living-room-lights-on"
+    """
+    action = parameters.get("action")
+    device = parameters.get("device")
+    color = parameters.get("color")
+    brightness = parameters.get("brightness")
+    
+    if not action or not device:
+        print(f"⚠️  Missing required parameters: device={device}, action={action}")
+        return
+    
+    # Normalize device name to VoiceMonkey format
+    normalized_device = normalize_device_name(device)
+    
+    # Build endpoint based on action
+    if action == "on":
+        endpoint = f"{normalized_device}-on"
+    elif action == "off":
+        endpoint = f"{normalized_device}-off"
+    elif action == "change color":
+        endpoint = f"{normalized_device}-color"
+        # Future enhancement: pass color parameter to VoiceMonkey
+        # This would require VoiceMonkey to support color parameters in triggers
+        if color:
+            print(f"🎨 Color parameter received: {color}")
+    elif action == "change brightness":
+        endpoint = f"{normalized_device}-brightness"
+        # Future enhancement: pass brightness parameter to VoiceMonkey
+        # This would require VoiceMonkey to support brightness parameters in triggers
+        if brightness:
+            print(f"💡 Brightness parameter received: {brightness}%")
     else:
-        pass # placeholder for now
+        print(f"⚠️  Unknown action: {action}")
+        return
+    
+    # Build API URL
+    url = f"https://api-v2.voicemonkey.io/trigger?token={voice_monkey_token}&device={endpoint}"
+    
+    # Make API call
+    try:
+        print(f"🔌 Triggering VoiceMonkey: {endpoint}")
+        await asyncio.to_thread(requests.get, url, timeout=5)
+        print(f"✅ Successfully triggered {device} → {action}")
+    except requests.exceptions.Timeout:
+        print(f"⏱️  Timeout controlling {device}: VoiceMonkey API took too long to respond")
+    except requests.exceptions.RequestException as e:
+        print(f"❌ Error controlling {device}: {e}")
+    except Exception as e:
+        print(f"❌ Unexpected error controlling {device}: {e}")

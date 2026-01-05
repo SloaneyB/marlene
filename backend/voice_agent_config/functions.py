@@ -1,6 +1,15 @@
 # Function definitions for Marlene Voice Agent
 # These functions are provided to the LLM to enable tool use
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Load device list from .env (natural language format)
+devices_str = os.getenv("SMART_HOME_DEVICES", "")
+DEVICE_LIST = [d.strip() for d in devices_str.split(",") if d.strip()]
+
 FUNCTION_DEFINITIONS = [
     {
         "name": "switch_to_tech_mode",
@@ -22,34 +31,40 @@ FUNCTION_DEFINITIONS = [
     },
     {
         "name": "control_smart_home",
-        "description": "Control smart home devices including lights and lamps. Use this when the user asks to turn devices on/off, adjust brightness, dim lights, or control any lighting in their home.",
+        "description": "Control smart home devices including lights and lamps. Use this when the user asks to turn devices on/off, adjust brightness, dim lights, change colors, or control any lighting in their home.",
         "parameters": {
             "type": "object",
             "properties": {
-                # "command": {
-                #     "type": "string",
-                #     "description": "The natural language command describing what the user wants to do with the smart home device (e.g., 'turn on bedroom light', 'dim living room lamp to 50%', 'turn off all lights')"
-                # }
                 "device": {
                     "type": "string",
-                    "description": "The name of the smart home device which is going to be controlled (e.g., 'bedroom light', 'living room lamp')",
-                    # IMPROVEMENT: make this list an env variable so that in the smart_home_controller.py we don't have to manually type in the 
-                    "enum": ["the tall lamp", "the living room lights", "the kitchen light", "the dining room light", "the main lights", "the light", "the hallway lights", "JJ's lamp", "JJ's light"]
+                    "description": """The specific smart home device to control. Select the device name that best matches what the user mentioned.
+                    
+                    Common variations the user might say:
+                    - 'Living Room Lights' - Also: 'the tall lamp', 'living room lamp', 'the lamp', 'the main lamp'
+                    - 'Kitchen Light' - Also: 'kitchen lights', 'the kitchen light'
+                    - 'Dining Room Light' - Also: 'dining room lights', 'the dining room light'
+                    - 'Main Lights' - Also: 'overhead lights', 'the main lights'
+                    - 'Hallway Lights' - Also: 'hallway light', 'the hallway lights'
+                    - 'JJ's Lamp' - Also: 'JJ's light', 'JJs lamp', 'the bedroom lamp'
+                    
+                    If the user's request is ambiguous (e.g., just says "the lamp" and multiple lamps exist), ask which specific device they mean before calling this function.
+                    Always select the exact device name from the enum, even if the user uses a variation.""",
+                    "enum": DEVICE_LIST
                 },
                 "action": {
                     "type": "string",
-                    "description": "The action to be performed on the device. For example, turning it off, turning it on, adjusting the brightness, adjusting the color.",
+                    "description": "The action to perform on the device.",
                     "enum": ["on", "off", "change color", "change brightness"]
                 },
-                # "color": {
-                #     "type": "string",
-                #     "description": "If the user requests the action of changing the color of a certain device, this parameter is also required. It is the color they wish to change to."
-                # },
-                # "brightness": {
-                #     "type": "string",
-                #     "description": "If the user requests the action of changing the birghtness of a certain device, this parameter is also required. It is the percentage they wish to change to. It can be any value that is a multiple of 5 and between 10 percent and 100 percent.",
-                #     "enum": ["10", "15", "20", "25", "30", "35", "40", "45", "50", "55", "60", "65", "70", "75", "80", "85", "90", "95", "100"]
-                # }
+                "color": {
+                    "type": "string",
+                    "description": "The color to change the device to (e.g., 'red', 'blue', 'warm white', 'cool white'). Only required when action is 'change color'."
+                },
+                "brightness": {
+                    "type": "string",
+                    "description": "The brightness percentage (10-100, in multiples of 5). Only required when action is 'change brightness'.",
+                    "enum": ["10", "15", "20", "25", "30", "35", "40", "45", "50", "55", "60", "65", "70", "75", "80", "85", "90", "95", "100"]
+                }
             },
             "required": ["device", "action"]
         }

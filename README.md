@@ -20,8 +20,88 @@ Edit `.env` and add:
 
 - `PORCUPINE_ACCESS_KEY=your_key_here`
 - `DEEPGRAM_API_KEY=your_key_here`
+- `VOICEMONKEY_API_TOKEN=your_token_here`
 
-### Step 3: Run the Program
+### Step 3: Configure Smart Home Devices (VoiceMonkey Setup)
+
+Marlene uses [VoiceMonkey.io](https://voicemonkey.io/) to control your smart home devices. Follow these steps to set up device control:
+
+#### 3.1: Get Your VoiceMonkey API Token
+
+1. Go to [VoiceMonkey.io](https://voicemonkey.io/) and sign up or log in
+2. Navigate to your account settings to find your API token
+3. Add it to your `.env` file: `VOICEMONKEY_API_TOKEN=your_token_here`
+
+#### 3.2: Create VoiceMonkey Triggers
+
+For each device you want to control, you must create **TWO triggers** in VoiceMonkey - one for ON and one for OFF.
+
+**Naming Convention (CRITICAL):**
+
+Your VoiceMonkey trigger names MUST follow this exact pattern:
+
+- **ON Trigger:** `<Device Name> ON`
+- **OFF Trigger:** `<Device Name> OFF`
+
+**Example Setup for "Living Room Lights":**
+
+1. In VoiceMonkey dashboard, create a new trigger
+2. Name it: `Living Room Lights ON`
+3. Configure it to turn on your smart device (e.g., smart plug, Alexa routine, etc.)
+4. Save
+
+![VoiceMonkey ON Trigger](docs/images/voicemonkey-on-trigger.png)
+
+5. Create another trigger
+6. Name it: `Living Room Lights OFF`
+7. Configure it to turn off the same smart device
+8. Save
+
+![VoiceMonkey OFF Trigger](docs/images/voicemonkey-off-trigger.png)
+
+**More Examples:**
+
+| Device Name        | ON Trigger              | OFF Trigger              |
+| ------------------ | ----------------------- | ------------------------ |
+| Living Room Lights | `Living Room Lights ON` | `Living Room Lights OFF` |
+| Kitchen Light      | `Kitchen Light ON`      | `Kitchen Light OFF`      |
+| JJ's Lamp          | `JJ's Lamp ON`          | `JJ's Lamp OFF`          |
+| Bedroom Lamp       | `Bedroom Lamp ON`       | `Bedroom Lamp OFF`       |
+
+**Important Notes:**
+
+- Spaces and capitalization in trigger names are fine
+- The system automatically converts names to the correct API format
+  - Example: `Living Room Lights` → API calls `living-room-lights-on`
+- Each trigger connects to your actual smart home device (Alexa routine, smart plug, etc.)
+
+#### 3.3: Add Devices to .env
+
+Once your VoiceMonkey triggers are created, add your devices to the `.env` file:
+
+```bash
+SMART_HOME_DEVICES=Living Room Lights, Kitchen Light, Dining Room Light, JJ's Lamp
+```
+
+**Tips:**
+
+- Use the exact device names from your VoiceMonkey triggers (without the ON/OFF suffix)
+- Separate multiple devices with commas
+- Spaces and capitalization are fine - the system normalizes them automatically
+- Make sure each device has both ON and OFF triggers in VoiceMonkey
+
+#### 3.4: Future Enhancement - Color & Brightness
+
+The system architecture supports color and brightness control. To enable these features in the future:
+
+**Additional VoiceMonkey Triggers (Optional):**
+
+- `<Device Name> COLOR` - for color changes
+- `<Device Name> BRIGHTNESS` - for brightness adjustments
+
+These are not required for basic on/off functionality.
+
+### Step 4: Run the Program
 
 **Terminal Mode (Recommended for testing):**
 
@@ -77,13 +157,17 @@ The AudioManager is a singleton that manages PyAudio, allowing both Porcupine an
 
 ## Future Enhancements
 
+### Recently Completed ✅
+
+- [x] **Add VoiceMonkey setup instructions** - Complete setup guide added to README
+- [x] **Add device enum as environment variables** - Device list now loaded from `.env` file
+- [x] **Refactor smart_home_controller.py** - Replaced repetitive if/elif chains with dynamic endpoint building
+- [x] **Implement async/await error handling** - Added proper HTTP response handling and graceful error recovery
+
 ### High Priority
 
-- [ ] **Add Alexa/VoiceMonkey setup instructions** - Document the process for connecting Alexa devices with VoiceMonkey.io API
-- [ ] **Add device enum as environment variables** - Move the hardcoded device list from `functions.py` to `.env` for easier configuration
-- [ ] **Refactor smart_home_controller.py** - Replace repetitive if/elif chains with the existing `device_trigger_map` dictionary
-- [ ] **Implement async/await error handling** - Add proper HTTP response handling and graceful error recovery in smart home controller
 - [ ] **Remove unused functions** - Delete `switch_to_tech_mode` and `switch_to_parenting_mode` function definitions (or implement their functionality)
+- [ ] **Add screenshot images** - Capture and add VoiceMonkey dashboard screenshots to `docs/images/` directory
 
 ### Smart Home Features
 
