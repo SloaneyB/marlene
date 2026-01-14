@@ -12,24 +12,6 @@ DEVICE_LIST = [d.strip() for d in devices_str.split(",") if d.strip()]
 
 FUNCTION_DEFINITIONS = [
     {
-        "name": "switch_to_tech_mode",
-        "description": "Call this function anytime the user asks a question about AI, machine learning, coding, software development, bitcoin, cryptocurrency, databases, emerging technologies, or a similar technical topic.",
-        "parameters": {
-            "type": "object",
-            "properties": {},
-            "required": []
-        }
-    },
-    {
-        "name": "switch_to_parenting_mode",
-        "description": "Call this function anytime the user asks for guidance on child development, parenting strategies, health concerns, any related topics, or if the user ever says something about their child.",
-        "parameters": {
-            "type": "object",
-            "properties": {},
-            "required": []
-        }
-    },
-    {
         "name": "control_smart_home",
         "description": "Control smart home devices including lights and lamps. Use this when the user asks to turn devices on/off, adjust brightness, dim lights, change colors, or control any lighting in their home.",
         "parameters": {

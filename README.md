@@ -163,11 +163,13 @@ The AudioManager is a singleton that manages PyAudio, allowing both Porcupine an
 - [x] **Add device enum as environment variables** - Device list now loaded from `.env` file
 - [x] **Refactor smart_home_controller.py** - Replaced repetitive if/elif chains with dynamic endpoint building
 - [x] **Implement async/await error handling** - Added proper HTTP response handling and graceful error recovery
+- [x] **Remove unused functions** - Delete `switch_to_tech_mode` and `switch_to_parenting_mode` function definitions (or implement their functionality)
 
 ### High Priority
 
-- [ ] **Remove unused functions** - Delete `switch_to_tech_mode` and `switch_to_parenting_mode` function definitions (or implement their functionality)
-- [ ] **Add screenshot images** - Capture and add VoiceMonkey dashboard screenshots to `docs/images/` directory
+- [ ] **Voice agent timeout configuration** - Make the websocket timeout configurable via environment variables
+- [ ] **Add conversation history** - Store recent exchanges for better context continuity
+- [ ] **Add support for Agent Thinking message** - Go through the Deepgram API spec and make sure that we are accounting for every single possible incoming message that might be coming back from Deepgram.
 
 ### Smart Home Features
 
@@ -180,10 +182,6 @@ The AudioManager is a singleton that manages PyAudio, allowing both Porcupine an
 
 ### Voice Agent Improvements
 
-- [ ] **Voice agent timeout configuration** - Make the websocket timeout configurable via environment variables
-- [ ] **Implement prompt mode switching** - Actually use the tech/parenting mode functions or remove them
-- [ ] **Expand the system prompt** - Add more context and capabilities to the default prompt
-- [ ] **Add conversation history** - Store recent exchanges for better context continuity
 - [ ] **Custom wake word support** - Allow users to train and use custom Porcupine wake words
 - [ ] **Voice activity detection tuning** - Add configuration for sensitivity and silence detection
 - [ ] **WebSocket reconnection** - Implement auto-reconnect if Deepgram connection drops
@@ -209,6 +207,7 @@ The AudioManager is a singleton that manages PyAudio, allowing both Porcupine an
 - [ ] **API documentation** - Document the server endpoints and their usage
 - [ ] **Contributing guide** - Add guidelines for contributors
 - [ ] **Architecture diagrams** - Visual representation of system components and data flow
+- [ ] **Add screenshot images** - Capture and add VoiceMonkey dashboard screenshots to `docs/images/` directory
 
 ## Troubleshooting
 
