@@ -95,6 +95,26 @@ class AudioPlayer:
         if self._running:
             self._queue.put(audio_bytes)
     
+    def clear(self):
+        """
+        Clear all buffered audio from the queue.
+        
+        This immediately stops playback by removing all queued audio chunks.
+        The currently playing chunk will finish, but no subsequent audio will play.
+        Safe to call even when no audio is playing.
+        """
+        if not self._running:
+            return
+        
+        # Drain all items from the queue
+        while not self._queue.empty():
+            try:
+                self._queue.get_nowait()
+            except queue.Empty:
+                break
+        
+        print("🔇 Audio buffer cleared")
+    
     def stop(self):
         """Stop the audio player and clean up resources."""
         if not self._running:

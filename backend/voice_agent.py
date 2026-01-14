@@ -21,15 +21,16 @@ class VoiceAgent:
         self._mic_stream = None
         self._is_running = False
 
-    async def listen(self, timeout_seconds: int = 30):
+    async def listen(self, inactivity_timeout: int = 10):
         """
         Establishes a websocket connection to Deepgram Agent API,
         sends microphone audio, and processes incoming responses.
         
         Args:
-            timeout_seconds: Duration in seconds to listen before closing (default: 30)
+            inactivity_timeout: Seconds of inactivity before closing connection (default: 10)
         """
         self._is_running = True
+        self._inactivity_timeout = inactivity_timeout
         
         try:
             headers = {
@@ -38,7 +39,7 @@ class VoiceAgent:
             
             async with websockets.connect(self.url, additional_headers=headers) as websocket:
                 self.connection = websocket
-                print(f"🔌 Connected to Deepgram Agent API (session: {timeout_seconds}s)")
+                print(f"🔌 Connected to Deepgram Agent API (inactivity timeout: {inactivity_timeout}s)")
                 
                 # Start the audio player for playback
                 self._audio_player = AudioPlayer()
@@ -55,17 +56,11 @@ class VoiceAgent:
                 )
                 print(f"🎤 Microphone stream opened (rate: {detected_rate}Hz)")
                 
-                # Run send and receive tasks concurrently with timeout
-                try:
-                    await asyncio.wait_for(
-                        asyncio.gather(
-                            self._send_audio_task(),
-                            self._receive_messages_task()
-                        ),
-                        timeout=timeout_seconds
-                    )
-                except asyncio.TimeoutError:
-                    print(f"⏱️  {timeout_seconds}s timeout reached, closing connection")
+                # Run send and receive tasks concurrently
+                await asyncio.gather(
+                    self._send_audio_task(),
+                    self._receive_messages_task()
+                )
 
         except Exception as e:
             print(f"Error in listen: {e}")
@@ -112,13 +107,17 @@ class VoiceAgent:
         """
         Receives and processes messages from the websocket.
         Runs in a loop until _is_running is False.
+        Closes connection if no messages received within inactivity_timeout.
         """
         print("📥 Starting message receive task...")
         
         while self._is_running and self.connection:
             try:
-                # Receive message from websocket
-                message = await self.connection.recv()
+                # Receive message from websocket with inactivity timeout
+                message = await asyncio.wait_for(
+                    self.connection.recv(),
+                    timeout=self._inactivity_timeout
+                )
                 
                 # Handle different message types
                 if isinstance(message, bytes):
@@ -137,7 +136,11 @@ class VoiceAgent:
                     # Unknown message type
                     print(f"❓ Unknown message type: {type(message)}")
                     print(f"   Content: {message}")
-                    
+            
+            except asyncio.TimeoutError:
+                print(f"⏱️  No messages received for {self._inactivity_timeout}s, closing connection")
+                self._is_running = False
+                break
             except websockets.exceptions.ConnectionClosed:
                 print("📥 Receive task: connection closed")
                 break
@@ -156,6 +159,9 @@ class VoiceAgent:
             print("✅ Settings applied successfully")
         elif msg_type == "UserStartedSpeaking":
             print("🗣️  User started speaking")
+            # Interrupt agent audio immediately
+            if self._audio_player:
+                self._audio_player.clear()
         elif msg_type == "AgentStartedSpeaking":
             print("🤖 Agent started speaking")
         elif msg_type == "ConversationText":
@@ -164,6 +170,10 @@ class VoiceAgent:
             print(f"💬 [{role}]: {content}")
         elif msg_type == "AgentAudioDone":
             print("🤖 Agent finished speaking")
+        elif msg_type == "AgentThinking":
+            print("🤖 Agent is thinking here are it's thoughts:")
+            print("💭 " + parsed.get("content", ""))
+            asyncio.create_task(self._inject_agent_message())
         elif msg_type == "FunctionCallRequest":
             functions = parsed.get("functions", [])
             if len(functions) > 1:
@@ -190,6 +200,17 @@ class VoiceAgent:
         if self.connection:
             await self.connection.send(json.dumps(SETTINGS))
             print("✅ SETTINGS sent successfully")
+
+    # I've built this but it doesn't come up very often in my testing. I just wanted to account for it.
+    async def _inject_agent_message(self):
+        """Inject agent message while agent is thinking."""
+        inject_message = {
+            "type": "InjectAgentMessage",
+            "message": "Hang on just a minute."
+        }
+        if self.connection:
+            await self.connection.send(json.dumps(inject_message))
+            print("✅ Inject Agent Message sent successfully")
 
     async def _send_function_call_response(self, function_call_response):
         """Send FunctionCallResponse to Deepgram."""
