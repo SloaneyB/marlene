@@ -142,15 +142,6 @@ Then open: `http://localhost:8001`
 - `.env.example` - Copy to `.env` and add your API keys
 - `pyproject.toml` - Dependencies
 
-## Configuration
-
-Edit `.env` to customize:
-
-- `PORCUPINE_KEYWORD=porcupine` (wake word)
-- `DEEPGRAM_MODEL=nova-2` (AI model)
-- `AUDIO_RATE=16000` (sample rate)
-- `API_PORT=8000` (server port)
-
 ## Architecture
 
 The AudioManager is a singleton that manages PyAudio, allowing both Porcupine and Deepgram to share the same audio device without conflicts.
@@ -164,12 +155,15 @@ The AudioManager is a singleton that manages PyAudio, allowing both Porcupine an
 - [x] **Refactor smart_home_controller.py** - Replaced repetitive if/elif chains with dynamic endpoint building
 - [x] **Implement async/await error handling** - Added proper HTTP response handling and graceful error recovery
 - [x] **Remove unused functions** - Delete `switch_to_tech_mode` and `switch_to_parenting_mode` function definitions (or implement their functionality)
+- [x] **Add support for Agent Thinking message** - Go through the Deepgram API spec and make sure that we are accounting for every single possible incoming message that might be coming back from Deepgram.
+- [x] **Add stop function** - User needs to be able to stop the connection immediately with a phrase like "stop".
+- [x] **Voice agent timeout** - Timeout currently set to 10 seconds of no incoming messages from DG. Make it play a sound too.
 
 ### High Priority
 
-- [ ] **Voice agent timeout configuration** - Make the websocket timeout configurable via environment variables
 - [ ] **Add conversation history** - Store recent exchanges for better context continuity
-- [ ] **Add support for Agent Thinking message** - Go through the Deepgram API spec and make sure that we are accounting for every single possible incoming message that might be coming back from Deepgram.
+- [ ] **Add logging system** - Replace print statements with Python's logging module for better debugging
+- [ ] **Add MongoDB integration** - Save important events to a MongoDB. Ex: The exact phrase a user says when they want to end the conversation. Or anytime a message comes in that is not one the explicit msg_types, etc.
 
 ### Smart Home Features
 
@@ -188,7 +182,6 @@ The AudioManager is a singleton that manages PyAudio, allowing both Porcupine an
 
 ### Code Quality & Robustness
 
-- [ ] **Add logging system** - Replace print statements with Python's logging module for better debugging
 - [ ] **Add comprehensive type hints** - Complete type annotations across all modules
 - [ ] **Graceful degradation** - Continue basic functions when external services are unavailable
 - [ ] **Rate limiting protection** - Prevent excessive API calls to external services

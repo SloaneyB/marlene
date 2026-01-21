@@ -3,6 +3,7 @@ import json
 import os
 from dotenv import load_dotenv
 import websockets
+from pydub import AudioSegment
 from .voice_agent_config.settings import SETTINGS
 from .audio_player import AudioPlayer
 from .audio_manager import AudioManager
@@ -20,6 +21,25 @@ class VoiceAgent:
         self._audio_manager = AudioManager()
         self._mic_stream = None
         self._is_running = False
+        
+        # Load power-off sound
+        power_off_path = os.path.join(
+            os.path.dirname(__file__),
+            "voice_agent_config",
+            "power-off.mp3"
+        )
+        try:
+            # Load and decode MP3 to raw PCM audio
+            audio = AudioSegment.from_mp3(power_off_path)
+            # Convert to the format expected by AudioPlayer (16-bit PCM, mono/stereo)
+            audio = audio.set_frame_rate(settings.audio_output_rate)
+            audio = audio.set_channels(settings.audio_channels)
+            audio = audio.set_sample_width(2)  # 16-bit audio
+            self._power_off_audio = audio.raw_data
+            print(f"✅ Loaded power-off sound ({len(self._power_off_audio)} bytes)")
+        except Exception as e:
+            print(f"⚠️  Failed to load power-off sound: {e}")
+            self._power_off_audio = None
 
     async def listen(self, inactivity_timeout: int = 10):
         """
@@ -140,6 +160,7 @@ class VoiceAgent:
             except asyncio.TimeoutError:
                 print(f"⏱️  No messages received for {self._inactivity_timeout}s, closing connection")
                 self._is_running = False
+                await self.close()
                 break
             except websockets.exceptions.ConnectionClosed:
                 print("📥 Receive task: connection closed")
@@ -183,7 +204,14 @@ class VoiceAgent:
             function_name = functions[0].get("name")
             function_call_id = functions[0].get("id")
             parameters = json.loads(functions[0].get("arguments", {}))
-            await control_smart_home(parameters)
+            if function_name == "control_smart_home":
+                await control_smart_home(parameters)
+            elif function_name == "end_conversation":
+                print(functions)
+                asyncio.create_task(self.close())
+                return # Need to return here so that you can stop the loop.
+            else:
+                pass
             function_call_response = {
                 "type": "FunctionCallResponse",
                 "name": function_name,
@@ -220,5 +248,16 @@ class VoiceAgent:
 
     async def close(self):
         """Close the connection"""
+        # Play power-off sound before closing
+        if self._audio_player and self._power_off_audio:
+            print("🔊 Playing power-off sound...")
+            self._audio_player.play(self._power_off_audio)
+            # Wait for sound to finish playing (calculate duration based on audio length)
+            # Assuming 16-bit stereo at output_rate, bytes_per_second = rate * channels * 2
+            bytes_per_second = settings.audio_output_rate * settings.audio_channels * 2
+            duration = len(self._power_off_audio) / bytes_per_second
+            # Add small buffer to ensure sound finishes
+            await asyncio.sleep(duration + 0.5)
+        
         if self.connection:
             await self.connection.close()

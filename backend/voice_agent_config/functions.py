@@ -50,5 +50,36 @@ FUNCTION_DEFINITIONS = [
             },
             "required": ["device", "action"]
         }
-    }
+    },
+    {
+        "name": "end_conversation",
+        "description": """End the conversation and close the connection. Call this function when:
+        - User says goodbye, thank you, stop, etc.
+        - User indicates they're done ("that's all I need", "I'm all set", etc.)
+        - User wants to end the conversation
+        
+        Examples of triggers:
+        - "Thank you, bye!"
+        - "That's all I needed, thanks"
+        - "Have a good day"
+        - "Goodbye"
+        - "I'm done"
+        - "Ok, stop."
+        
+        Do not call this function if the user is just saying thanks but continuing the conversation.""",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                # "reason_for_ending": {
+                #     "type": "string",
+                #     "description": "Reason for ending the conversation, based on the user's last message.",
+                # },
+                "exact_utterance": {
+                    "type": "string", 
+                    "description": "The exact phrase the user said that indicates they want to end the conversation."
+                }
+            },
+            "required": ["exact_utterance"],
+        },
+    },
 ]
