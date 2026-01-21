@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import requests
 import os
 from dotenv import load_dotenv
@@ -7,6 +8,8 @@ from .utils import normalize_device_name
 load_dotenv()
 
 voice_monkey_token = os.getenv("VOICEMONKEY_API_TOKEN")
+
+logger = logging.getLogger(__name__)
 
 async def control_smart_home(parameters):
     """
@@ -32,7 +35,7 @@ async def control_smart_home(parameters):
     brightness = parameters.get("brightness")
     
     if not action or not device:
-        print(f"⚠️  Missing required parameters: device={device}, action={action}")
+        logger.warning(f"Missing required parameters: device={device}, action={action}")
         return
     
     # Normalize device name to VoiceMonkey format
@@ -48,15 +51,15 @@ async def control_smart_home(parameters):
         # Future enhancement: pass color parameter to VoiceMonkey
         # This would require VoiceMonkey to support color parameters in triggers
         if color:
-            print(f"🎨 Color parameter received: {color}")
+            logger.debug(f"Color parameter received: {color}")
     elif action == "change brightness":
         endpoint = f"{normalized_device}-brightness"
         # Future enhancement: pass brightness parameter to VoiceMonkey
         # This would require VoiceMonkey to support brightness parameters in triggers
         if brightness:
-            print(f"💡 Brightness parameter received: {brightness}%")
+            logger.debug(f"Brightness parameter received: {brightness}%")
     else:
-        print(f"⚠️  Unknown action: {action}")
+        logger.warning(f"Unknown action: {action}")
         return
     
     # Build API URL
@@ -64,12 +67,12 @@ async def control_smart_home(parameters):
     
     # Make API call
     try:
-        print(f"🔌 Triggering VoiceMonkey: {endpoint}")
+        logger.info(f"Triggering VoiceMonkey: {endpoint}")
         await asyncio.to_thread(requests.get, url, timeout=5)
-        print(f"✅ Successfully triggered {device} → {action}")
+        logger.info(f"Successfully triggered {device} -> {action}")
     except requests.exceptions.Timeout:
-        print(f"⏱️  Timeout controlling {device}: VoiceMonkey API took too long to respond")
+        logger.warning(f"Timeout controlling {device}: VoiceMonkey API took too long to respond")
     except requests.exceptions.RequestException as e:
-        print(f"❌ Error controlling {device}: {e}")
+        logger.error(f"Error controlling {device}: {e}")
     except Exception as e:
-        print(f"❌ Unexpected error controlling {device}: {e}")
+        logger.error(f"Unexpected error controlling {device}: {e}")

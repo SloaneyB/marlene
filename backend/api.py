@@ -1,4 +1,5 @@
 """FastAPI server for Marlene smart home assistant."""
+import logging
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -8,6 +9,8 @@ import asyncio
 from backend.config import settings
 from backend.wake_word_detector import WakeWordDetector
 from backend.voice_agent import VoiceAgent
+
+logger = logging.getLogger(__name__)
 
 
 app = FastAPI(title="Marlene Smart Home Assistant", version="0.1.0")
@@ -124,7 +127,7 @@ async def websocket_endpoint(websocket: WebSocket):
             await websocket.send_json(status)
             await asyncio.sleep(1)
     except WebSocketDisconnect:
-        print("WebSocket client disconnected")
+        logger.info("WebSocket client disconnected")
 
 
 @app.on_event("startup")
@@ -132,8 +135,8 @@ async def startup_event():
     """Initialize components on startup."""
     global voice_agent
     voice_agent = VoiceAgent()
-    print(f"\n✨ Marlene API Server starting on {settings.api_host}:{settings.api_port}")
-    print(f"📚 API Docs: http://{settings.api_host}:{settings.api_port}/docs\n")
+    logger.info(f"Marlene API Server starting on {settings.api_host}:{settings.api_port}")
+    logger.info(f"API Docs: http://{settings.api_host}:{settings.api_port}/docs")
 
 
 @app.on_event("shutdown")

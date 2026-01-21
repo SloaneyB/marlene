@@ -1,9 +1,12 @@
 """Audio playback for Marlene smart home assistant."""
+import logging
 import queue
 import threading
 from typing import Optional
 from .audio_manager import AudioManager
 from .config import settings
+
+logger = logging.getLogger(__name__)
 
 
 class AudioPlayer:
@@ -61,7 +64,7 @@ class AudioPlayer:
             daemon=True
         )
         self._playback_thread.start()
-        print(f"🔊 Audio player started (rate={self.sample_rate}Hz, channels={self.channels})")
+        logger.info(f"Audio player started (rate={self.sample_rate}Hz, channels={self.channels})")
     
     def _playback_loop(self):
         """Background thread loop that plays audio from the queue."""
@@ -82,7 +85,7 @@ class AudioPlayer:
                 # No data available, continue waiting
                 continue
             except Exception as e:
-                print(f"❌ Audio playback error: {e}")
+                logger.error(f"Audio playback error: {e}")
                 break
     
     def play(self, audio_bytes: bytes):
@@ -113,7 +116,7 @@ class AudioPlayer:
             except queue.Empty:
                 break
         
-        print("🔇 Audio buffer cleared")
+        logger.info("Audio buffer cleared")
     
     def stop(self):
         """Stop the audio player and clean up resources."""
@@ -141,7 +144,7 @@ class AudioPlayer:
             except queue.Empty:
                 break
         
-        print("🔇 Audio player stopped")
+        logger.info("Audio player stopped")
     
     def __enter__(self):
         """Context manager entry."""

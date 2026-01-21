@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 import os
 from dotenv import load_dotenv
 import websockets
@@ -12,6 +13,8 @@ from .voice_agent_config.smart_home_controller import control_smart_home
 
 load_dotenv()
 DEEPGRAM_API_KEY: str = os.getenv("DEEPGRAM_API_KEY")
+
+logger = logging.getLogger(__name__)
 
 class VoiceAgent:
     def __init__(self):
@@ -36,9 +39,9 @@ class VoiceAgent:
             audio = audio.set_channels(settings.audio_channels)
             audio = audio.set_sample_width(2)  # 16-bit audio
             self._power_off_audio = audio.raw_data
-            print(f"✅ Loaded power-off sound ({len(self._power_off_audio)} bytes)")
+            logger.info(f"Loaded power-off sound ({len(self._power_off_audio)} bytes)")
         except Exception as e:
-            print(f"⚠️  Failed to load power-off sound: {e}")
+            logger.warning(f"Failed to load power-off sound: {e}")
             self._power_off_audio = None
 
     async def listen(self, inactivity_timeout: int = 10):
@@ -59,7 +62,7 @@ class VoiceAgent:
             
             async with websockets.connect(self.url, additional_headers=headers) as websocket:
                 self.connection = websocket
-                print(f"🔌 Connected to Deepgram Agent API (inactivity timeout: {inactivity_timeout}s)")
+                logger.info(f"Connected to Deepgram Agent API (inactivity timeout: {inactivity_timeout}s)")
                 
                 # Start the audio player for playback
                 self._audio_player = AudioPlayer()
@@ -74,7 +77,7 @@ class VoiceAgent:
                     chunk_size=settings.audio_chunk_size,
                     channels=settings.audio_channels
                 )
-                print(f"🎤 Microphone stream opened (rate: {detected_rate}Hz)")
+                logger.info(f"Microphone stream opened (rate: {detected_rate}Hz)")
                 
                 # Run send and receive tasks concurrently
                 await asyncio.gather(
@@ -83,7 +86,7 @@ class VoiceAgent:
                 )
 
         except Exception as e:
-            print(f"Error in listen: {e}")
+            logger.error(f"Error in listen: {e}")
             raise
         finally:
             self._is_running = False
@@ -95,14 +98,14 @@ class VoiceAgent:
             if self._audio_player:
                 self._audio_player.stop()
                 self._audio_player = None
-            print("✅ Voice session ended")
+            logger.info("Voice session ended")
 
     async def _send_audio_task(self):
         """
         Continuously captures audio from microphone and sends to websocket.
         Runs in a loop until _is_running is False.
         """
-        print("📤 Starting audio send task...")
+        logger.debug("Starting audio send task")
         
         while self._is_running and self.connection:
             try:
@@ -117,10 +120,10 @@ class VoiceAgent:
                 await self.connection.send(audio_data)
                 
             except websockets.exceptions.ConnectionClosed:
-                print("📤 Send task: connection closed")
+                logger.info("Send task: connection closed")
                 break
             except Exception as e:
-                print(f"📤 Send task error: {e}")
+                logger.error(f"Send task error: {e}")
                 break
     
     async def _receive_messages_task(self):
@@ -129,7 +132,7 @@ class VoiceAgent:
         Runs in a loop until _is_running is False.
         Closes connection if no messages received within inactivity_timeout.
         """
-        print("📥 Starting message receive task...")
+        logger.debug("Starting message receive task")
         
         while self._is_running and self.connection:
             try:
@@ -151,22 +154,22 @@ class VoiceAgent:
                         await self._handle_json_message(parsed)
                     except json.JSONDecodeError:
                         # Plain text message
-                        print(f"📝 Text message received: {message}")
+                        logger.debug(f"Text message received: {message}")
                 else:
                     # Unknown message type
-                    print(f"❓ Unknown message type: {type(message)}")
-                    print(f"   Content: {message}")
+                    logger.warning(f"Unknown message type: {type(message)}")
+                    logger.warning(f"Content: {message}")
             
             except asyncio.TimeoutError:
-                print(f"⏱️  No messages received for {self._inactivity_timeout}s, closing connection")
+                logger.info(f"No messages received for {self._inactivity_timeout}s, closing connection")
                 self._is_running = False
                 await self.close()
                 break
             except websockets.exceptions.ConnectionClosed:
-                print("📥 Receive task: connection closed")
+                logger.info("Receive task: connection closed")
                 break
             except Exception as e:
-                print(f"📥 Receive task error: {e}")
+                logger.error(f"Receive task error: {e}")
                 break
     
     async def _handle_json_message(self, parsed: dict):
@@ -174,26 +177,26 @@ class VoiceAgent:
         msg_type = parsed.get("type", "unknown")
         
         if msg_type == "Welcome":
-            print("👋 Welcome message received, sending SETTINGS...")
+            logger.info("Welcome message received, sending SETTINGS")
             asyncio.create_task(self._send_settings())
         elif msg_type == "SettingsApplied":
-            print("✅ Settings applied successfully")
+            logger.info("Settings applied successfully")
         elif msg_type == "UserStartedSpeaking":
-            print("🗣️  User started speaking")
+            logger.info("User started speaking")
             # Interrupt agent audio immediately
             if self._audio_player:
                 self._audio_player.clear()
         elif msg_type == "AgentStartedSpeaking":
-            print("🤖 Agent started speaking")
+            logger.info("Agent started speaking")
         elif msg_type == "ConversationText":
             role = parsed.get("role", "unknown")
             content = parsed.get("content", "")
-            print(f"💬 [{role}]: {content}")
+            logger.info(f"[{role}]: {content}")
         elif msg_type == "AgentAudioDone":
-            print("🤖 Agent finished speaking")
+            logger.info("Agent finished speaking")
         elif msg_type == "AgentThinking":
-            print("🤖 Agent is thinking here are it's thoughts:")
-            print("💭 " + parsed.get("content", ""))
+            logger.info("Agent is thinking, here are its thoughts:")
+            logger.info(parsed.get("content", ""))
             asyncio.create_task(self._inject_agent_message())
         elif msg_type == "FunctionCallRequest":
             functions = parsed.get("functions", [])
@@ -207,7 +210,7 @@ class VoiceAgent:
             if function_name == "control_smart_home":
                 await control_smart_home(parameters)
             elif function_name == "end_conversation":
-                print(functions)
+                logger.info(f"End conversation function called. Parameters: {parameters}")
                 asyncio.create_task(self.close())
                 return # Need to return here so that you can stop the loop.
             else:
@@ -221,13 +224,13 @@ class VoiceAgent:
             asyncio.create_task(self._send_function_call_response(function_call_response))
         else:
             # Log other message types
-            print(f"📨 {msg_type}: {json.dumps(parsed, indent=2)}")
+            logger.debug(f"{msg_type}: {json.dumps(parsed, indent=2)}")
     
     async def _send_settings(self):
         """Send settings configuration to Deepgram."""
         if self.connection:
             await self.connection.send(json.dumps(SETTINGS))
-            print("✅ SETTINGS sent successfully")
+            logger.debug("SETTINGS sent successfully")
 
     # I've built this but it doesn't come up very often in my testing. I just wanted to account for it.
     async def _inject_agent_message(self):
@@ -238,19 +241,19 @@ class VoiceAgent:
         }
         if self.connection:
             await self.connection.send(json.dumps(inject_message))
-            print("✅ Inject Agent Message sent successfully")
+            logger.debug("Inject Agent Message sent successfully")
 
     async def _send_function_call_response(self, function_call_response):
         """Send FunctionCallResponse to Deepgram."""
         if self.connection:
             await self.connection.send(json.dumps(function_call_response))
-            print("✅ Function Call Response sent successfully")
+            logger.debug("Function Call Response sent successfully")
 
     async def close(self):
         """Close the connection"""
         # Play power-off sound before closing
         if self._audio_player and self._power_off_audio:
-            print("🔊 Playing power-off sound...")
+            logger.info("Playing power-off sound")
             self._audio_player.play(self._power_off_audio)
             # Wait for sound to finish playing (calculate duration based on audio length)
             # Assuming 16-bit stereo at output_rate, bytes_per_second = rate * channels * 2

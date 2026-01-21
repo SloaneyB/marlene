@@ -1,5 +1,6 @@
 """Wake word detection using Porcupine."""
 import asyncio
+import logging
 import struct
 import pvporcupine
 from typing import Callable, Optional, Awaitable
@@ -11,6 +12,8 @@ import os
 load_dotenv()
 
 PORCUPINE_ACCESS_KEY: str = os.getenv("PORCUPINE_ACCESS_KEY")
+
+logger = logging.getLogger(__name__)
 
 class WakeWordDetector:
     """Detects wake word using Porcupine picovoice."""
@@ -33,10 +36,10 @@ class WakeWordDetector:
     async def start(self):
         """Start listening for wake word."""
         if self.is_listening:
-            print("Wake word detector already running")
+            logger.warning("Wake word detector already running")
             return
         
-        print(f"Initializing Porcupine with keyword: '{settings.porcupine_keyword}'")
+        logger.info(f"Initializing Porcupine with keyword: '{settings.porcupine_keyword}'")
         
         # Initialize Porcupine (only if not already initialized)
         if not self.porcupine:
@@ -46,14 +49,14 @@ class WakeWordDetector:
                 #     keywords=[settings.porcupine_keyword],
                 #     sensitivities=[settings.porcupine_sensitivity]
                 # )
-                print(f'From Settings, file path = {settings.porcupine_keyword_file_path}')
+                logger.debug(f"From Settings, file path = {settings.porcupine_keyword_file_path}")
                 self.porcupine = pvporcupine.create(
                     access_key=PORCUPINE_ACCESS_KEY,
                     keyword_paths=[settings.porcupine_keyword_file_path]
                     )
 
             except Exception as e:
-                print(f"Error initializing Porcupine: {e}")
+                logger.error(f"Error initializing Porcupine: {e}")
                 raise
         
         # Get and store audio device index
@@ -64,8 +67,7 @@ class WakeWordDetector:
         
         self.is_listening = True
         self._is_paused = False
-        print(f"\n🎤 Listening for wake word: '{settings.porcupine_keyword}'...")
-        print("Press Ctrl+C to stop\n")
+        logger.info(f"Listening for wake word: '{settings.porcupine_keyword}'")
         
         try:
             while self.is_listening:
@@ -82,14 +84,14 @@ class WakeWordDetector:
                 keyword_index = self.porcupine.process(pcm)
                 
                 if keyword_index >= 0:
-                    print(f"\n✨ Wake word '{settings.porcupine_keyword}' detected!")
+                    logger.info(f"Wake word '{settings.porcupine_keyword}' detected")
                     await self.on_wake_word()
-                    # Only print resume message if not stopped
+                    # Only log resume message if not stopped
                     if self.is_listening:
-                        print(f"\n🎤 Listening for wake word: '{settings.porcupine_keyword}'...\n")
+                        logger.info(f"Listening for wake word: '{settings.porcupine_keyword}'")
                     
         except KeyboardInterrupt:
-            print("\n\nStopping wake word detection...")
+            logger.info("Stopping wake word detection")
             self.stop()
     
     def _open_stream(self):
@@ -120,7 +122,7 @@ class WakeWordDetector:
         
         self._close_stream()
         self._is_paused = True
-        print("⏸️  Wake word detector paused")
+        logger.info("Wake word detector paused")
     
     def resume(self):
         """
@@ -130,12 +132,12 @@ class WakeWordDetector:
             return
         
         if not self.porcupine:
-            print("Cannot resume - Porcupine not initialized")
+            logger.warning("Cannot resume - Porcupine not initialized")
             return
         
         self._open_stream()
         self._is_paused = False
-        print(f"▶️  Wake word detector resumed - listening for '{settings.porcupine_keyword}'...")
+        logger.info(f"Wake word detector resumed - listening for '{settings.porcupine_keyword}'")
     
     def stop(self):
         """Stop listening and cleanup resources."""
@@ -149,7 +151,7 @@ class WakeWordDetector:
             self.porcupine.delete()
             self.porcupine = None
         
-        print("Wake word detector stopped")
+        logger.info("Wake word detector stopped")
     
     def __del__(self):
         """Ensure cleanup on deletion."""

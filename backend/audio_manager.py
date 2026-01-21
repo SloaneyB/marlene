@@ -1,7 +1,10 @@
 """Audio device management for Marlene smart home assistant."""
+import logging
 import pyaudio
 from typing import Optional
 from backend.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 class AudioManager:
@@ -35,7 +38,7 @@ class AudioManager:
         Returns:
             Device index or None to use system default
         """
-        print("\n=== Available Audio Input Devices ===")
+        logger.info("Available Audio Input Devices")
         usb_device_idx = None
         
         for i in range(self.p.get_device_count()):
@@ -44,28 +47,26 @@ class AudioManager:
             max_input_channels = info.get("maxInputChannels", 0)
             
             if max_input_channels > 0:
-                print(f"Index {i}: {name} (Input channels: {max_input_channels})")
+                logger.info(f"Index {i}: {name} (Input channels: {max_input_channels})")
             
             # Look for USB devices
             if prefer_usb and "usb" in name.lower() and max_input_channels > 0:
                 if usb_device_idx is None:
                     usb_device_idx = i
         
-        print("=" * 40 + "\n")
-        
         if usb_device_idx is not None:
             device_name = self.p.get_device_info_by_index(usb_device_idx).get('name')
-            print(f"🎤 Using USB input device: {device_name} (index {usb_device_idx})")
+            logger.info(f"Using USB input device: {device_name} (index {usb_device_idx})")
             return usb_device_idx
         
         # Fall back to default device
         try:
             default_info = self.p.get_default_input_device_info()
             default_idx = default_info.get('index')
-            print(f"🎤 Using default input device: {default_info.get('name')} (index {default_idx})")
+            logger.info(f"Using default input device: {default_info.get('name')} (index {default_idx})")
             return default_idx
         except Exception as e:
-            print(f"Warning: Could not get default input device: {e}")
+            logger.warning(f"Could not get default input device: {e}")
             return None
 
     def get_output_device_index(self, prefer_usb: bool = True) -> Optional[int]:
@@ -78,7 +79,7 @@ class AudioManager:
         Returns:
             Device index or None to use system default
         """
-        print("\n=== Available Audio Output Devices ===")
+        logger.info("Available Audio Output Devices")
         usb_device_idx = None
         
         for i in range(self.p.get_device_count()):
@@ -87,28 +88,26 @@ class AudioManager:
             max_output_channels = info.get("maxOutputChannels", 0)
             
             if max_output_channels > 0:
-                print(f"Index {i}: {name} (Output channels: {max_output_channels})")
+                logger.info(f"Index {i}: {name} (Output channels: {max_output_channels})")
             
             # Look for USB devices
             if prefer_usb and "usb" in name.lower() and max_output_channels > 0:
                 if usb_device_idx is None:
                     usb_device_idx = i
         
-        print("=" * 40 + "\n")
-        
         if usb_device_idx is not None:
             device_name = self.p.get_device_info_by_index(usb_device_idx).get('name')
-            print(f"🔊 Using USB output device: {device_name} (index {usb_device_idx})")
+            logger.info(f"Using USB output device: {device_name} (index {usb_device_idx})")
             return usb_device_idx
         
         # Fall back to default device
         try:
             default_info = self.p.get_default_output_device_info()
             default_idx = default_info.get('index')
-            print(f"🔊 Using default output device: {default_info.get('name')} (index {default_idx})")
+            logger.info(f"Using default output device: {default_info.get('name')} (index {default_idx})")
             return default_idx
         except Exception as e:
-            print(f"Warning: Could not get default output device: {e}")
+            logger.warning(f"Could not get default output device: {e}")
             return None
     
     def get_device_sample_rate(self, device_index: Optional[int] = None) -> int:
@@ -129,10 +128,10 @@ class AudioManager:
             
             sample_rate = int(device_info.get('defaultSampleRate', 48000))
             device_name = device_info.get('name', 'Unknown')
-            print(f"🎵 Detected sample rate: {sample_rate} Hz for device '{device_name}'")
+            logger.info(f"Detected sample rate: {sample_rate} Hz for device '{device_name}'")
             return sample_rate
         except Exception as e:
-            print(f"Warning: Could not detect sample rate, defaulting to 48000 Hz: {e}")
+            logger.warning(f"Could not detect sample rate, defaulting to 48000 Hz: {e}")
             return 48000
     
     def open_input_stream(

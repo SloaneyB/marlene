@@ -161,7 +161,6 @@ The AudioManager is a singleton that manages PyAudio, allowing both Porcupine an
 
 ### High Priority
 
-- [ ] **Add conversation history** - Store recent exchanges for better context continuity
 - [ ] **Add logging system** - Replace print statements with Python's logging module for better debugging
 - [ ] **Add MongoDB integration** - Save important events to a MongoDB. Ex: The exact phrase a user says when they want to end the conversation. Or anytime a message comes in that is not one the explicit msg_types, etc.
 
