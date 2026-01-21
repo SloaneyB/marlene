@@ -158,11 +158,11 @@ The AudioManager is a singleton that manages PyAudio, allowing both Porcupine an
 - [x] **Add support for Agent Thinking message** - Go through the Deepgram API spec and make sure that we are accounting for every single possible incoming message that might be coming back from Deepgram.
 - [x] **Add stop function** - User needs to be able to stop the connection immediately with a phrase like "stop".
 - [x] **Voice agent timeout** - Timeout currently set to 10 seconds of no incoming messages from DG. Make it play a sound too.
+- [x] **Add logging system** - Replace print statements with Python's logging module for better debugging
 
 ### High Priority
 
-- [ ] **Add logging system** - Replace print statements with Python's logging module for better debugging
-- [ ] **Add MongoDB integration** - Save important events to a MongoDB. Ex: The exact phrase a user says when they want to end the conversation. Or anytime a message comes in that is not one the explicit msg_types, etc.
+- [ ] **Add Supabase integration** - Save important events to a Supabase. Ex: The exact phrase a user says when they want to end the conversation. Or anytime a message comes in that is not one the explicit msg_types, etc.
 
 ### Smart Home Features
 
@@ -178,6 +178,8 @@ The AudioManager is a singleton that manages PyAudio, allowing both Porcupine an
 - [ ] **Custom wake word support** - Allow users to train and use custom Porcupine wake words
 - [ ] **Voice activity detection tuning** - Add configuration for sensitivity and silence detection
 - [ ] **WebSocket reconnection** - Implement auto-reconnect if Deepgram connection drops
+- [ ] **Spotify Controls** - Integration with Spotify and speakers around the house.
+- [ ] **Note Taking system** - Allow robust system for user to be able to tell Marlene to create a note or edit an existing note. Examples: grocery list, to do list, etc. Possibly use Supabase or Apple Notes or Google Keep integration. MCP???
 
 ### Code Quality & Robustness
 
