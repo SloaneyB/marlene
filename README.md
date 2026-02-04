@@ -24,7 +24,82 @@ Edit `.env` and add:
 
 ### Step 3: Configure Smart Home Devices (VoiceMonkey Setup)
 
-Marlene uses [VoiceMonkey.io](https://voicemonkey.io/) in conjunction with Amazon Alexa to control your smart home devices. Follow these steps in [this setup guide](https://github.com/SloaneyB/marlene/blob/main/docs/images/README.md) to configure your smart home w/ VoiceMonkey.io + Amazon Alexa.
+Marlene uses [VoiceMonkey.io](https://voicemonkey.io/) to control your smart home devices. Follow these steps to set up device control:
+
+#### 3.1: Get Your VoiceMonkey API Token
+
+1. Go to [VoiceMonkey.io](https://voicemonkey.io/) and sign up or log in
+2. Navigate to your account settings to find your API token
+3. Add it to your `.env` file: `VOICEMONKEY_API_TOKEN=your_token_here`
+
+#### 3.2: Create VoiceMonkey Triggers
+
+For each device you want to control, you must create **TWO triggers** in VoiceMonkey - one for ON and one for OFF.
+
+**Naming Convention (CRITICAL):**
+
+Your VoiceMonkey trigger names MUST follow this exact pattern:
+
+- **ON Trigger:** `<Device Name> ON`
+- **OFF Trigger:** `<Device Name> OFF`
+
+**Example Setup for "Living Room Lights":**
+
+1. In VoiceMonkey dashboard, create a new trigger
+2. Name it: `Living Room Lights ON`
+3. Configure it to turn on your smart device (e.g., smart plug, Alexa routine, etc.)
+4. Save
+
+![VoiceMonkey ON Trigger](docs/images/voicemonkey-on-trigger.png)
+
+5. Create another trigger
+6. Name it: `Living Room Lights OFF`
+7. Configure it to turn off the same smart device
+8. Save
+
+![VoiceMonkey OFF Trigger](docs/images/voicemonkey-off-trigger.png)
+
+**More Examples:**
+
+| Device Name        | ON Trigger              | OFF Trigger              |
+| ------------------ | ----------------------- | ------------------------ |
+| Living Room Lights | `Living Room Lights ON` | `Living Room Lights OFF` |
+| Kitchen Light      | `Kitchen Light ON`      | `Kitchen Light OFF`      |
+| JJ's Lamp          | `JJ's Lamp ON`          | `JJ's Lamp OFF`          |
+| Bedroom Lamp       | `Bedroom Lamp ON`       | `Bedroom Lamp OFF`       |
+
+**Important Notes:**
+
+- Spaces and capitalization in trigger names are fine
+- The system automatically converts names to the correct API format
+  - Example: `Living Room Lights` → API calls `living-room-lights-on`
+- Each trigger connects to your actual smart home device (Alexa routine, smart plug, etc.)
+
+#### 3.3: Add Devices to .env
+
+Once your VoiceMonkey triggers are created, add your devices to the `.env` file:
+
+```bash
+SMART_HOME_DEVICES=Living Room Lights, Kitchen Light, Dining Room Light, JJ's Lamp
+```
+
+**Tips:**
+
+- Use the exact device names from your VoiceMonkey triggers (without the ON/OFF suffix)
+- Separate multiple devices with commas
+- Spaces and capitalization are fine - the system normalizes them automatically
+- Make sure each device has both ON and OFF triggers in VoiceMonkey
+
+#### 3.4: Future Enhancement - Color & Brightness
+
+The system architecture supports color and brightness control. To enable these features in the future:
+
+**Additional VoiceMonkey Triggers (Optional):**
+
+- `<Device Name> COLOR` - for color changes
+- `<Device Name> BRIGHTNESS` - for brightness adjustments
+
+These are not required for basic on/off functionality.
 
 ### Step 4: Run the Program
 
@@ -87,13 +162,6 @@ The AudioManager is a singleton that manages PyAudio, allowing both Porcupine an
 
 ### High Priority
 
-- [ ] **BUG!! 10 second timeout config** - It times out when you are in the middle of talking. The logic needs to be to look for 10 seconds of no messages AND userStartedSpeaking = true
-- [ ] **Clean up AI slop** - There is a bunch of slop from claude including but not limted to:
-  - references to sample rate (and other vars) in config.py file as well as .env as well as the voice_agent_config settings.py
-  - The whole thing about screenshots in the docs
-  - The whole server.py and browser url
-  - The more complex bits like voice_agent.py, audio_manager.py, audio_player.py should be carefully studied and refactored.
-
 - [ ] **Add Supabase integration** - Save important events to a Supabase. Ex: The exact phrase a user says when they want to end the conversation. Or anytime a message comes in that is not one the explicit msg_types, etc.
 
 ### Smart Home Features
@@ -140,7 +208,6 @@ The AudioManager is a singleton that manages PyAudio, allowing both Porcupine an
 - List audio devices: `python -c "import pyaudio; p = pyaudio.PyAudio(); [print(f'{i}: {p.get_device_info_by_index(i)[\"name\"]}') for i in range(p.get_device_count())]"`
 - Check API keys at https://console.picovoice.ai/ and https://console.deepgram.com/
 - Port in use: `lsof -i :8000`
-- On Raspberry Pi OS - make sure you install portaudio first! `sudo apt install portaudio19-dev`
 
 ---
 

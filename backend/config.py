@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     # Porcupine settings
     porcupine_keyword: str = "Hey Marlene"  # custom keyword
     porcupine_sensitivity: float = 0.5
-    porcupine_keyword_file_path: str = "./backend/porcupine_config/hey-marlene_mac.ppn"
+    porcupine_keyword_file_path: str = "./backend/porcupine_config/hey-marlene_pi.ppn"
     
     # Deepgram settings
     deepgram_model: str = "nova-2"

@@ -167,8 +167,8 @@ class AudioManager:
             "frames_per_buffer": chunk_size,
         }
         
-        if device_index is not None:
-            stream_kwargs["input_device_index"] = device_index
+        # if device_index is not None:
+        #     stream_kwargs["input_device_index"] = device_index
         
         stream = self.p.open(**stream_kwargs)
         self._streams.append(stream)
@@ -195,9 +195,11 @@ class AudioManager:
         Returns:
             PyAudio stream object
         """
-        rate = rate or settings.audio_output_rate
+        # rate = rate or settings.audio_output_rate
+        rate = 16000
         chunk_size = chunk_size or settings.audio_chunk_size
-        channels = channels or settings.audio_channels
+        # channels = channels or settings.audio_channels
+        channels = 1
         
         stream_kwargs = {
             "format": format,
@@ -207,9 +209,10 @@ class AudioManager:
             "frames_per_buffer": chunk_size,
         }
         
-        if device_index is not None:
-            stream_kwargs["output_device_index"] = device_index
+        # if device_index is not None:
+        #     stream_kwargs["output_device_index"] = device_index
         
+        print(f'About to open output stream with format: {format}, channels: {channels}, rate: {rate}')
         stream = self.p.open(**stream_kwargs)
         self._streams.append(stream)
         return stream
